@@ -367,7 +367,7 @@ footer { color: var(--muted); font-size: 0.85rem; }
   };
   const bag = Object.entries(MOLS).flatMap(([k, m]) => Array(Math.round(m.w * 2)).fill(k));
 
-  const AMP = 0.09; // vibration amplitude in Angstrom (exaggerated so it reads on screen)
+  const AMP = 0.045; // vibration amplitude in Angstrom (exaggerated so it reads on screen)
   const PAD = 70;
   let W = 0, H = 0, items = [];
   const rand = (a, b) => a + Math.random() * (b - a);
@@ -385,7 +385,7 @@ footer { color: var(--muted); font-size: 0.85rem; }
       vx: sp * Math.cos(dir), vy: sp * Math.sin(dir),
       axis: [s * Math.cos(ph), s * Math.sin(ph), u],
       th: rand(0, 2 * Math.PI), w: rand(0.15, 0.45) * (Math.random() < 0.5 ? -1 : 1),
-      scale: lerp(11, 28, depth),
+      scale: lerp(9, 22, depth),
       alpha: lerp(0.5, 1, depth),
       parallax: lerp(0.04, 0.4, depth),
       phase: m.modes.map(() => rand(0, 2 * Math.PI))
@@ -428,15 +428,9 @@ footer { color: var(--muted); font-size: 0.85rem; }
       return { e, x: cx + X * it.scale * f, y: cy + Y * it.scale * f, z: Z, f };
     });
     ctx.globalAlpha = it.alpha;
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = 'rgb(140,148,160)';
-    ctx.lineWidth = it.scale * 0.2;
-    for (const [a, b] of it.m.bonds) {
-      ctx.beginPath(); ctx.moveTo(P[a].x, P[a].y); ctx.lineTo(P[b].x, P[b].y); ctx.stroke();
-    }
     const soft = 1 - it.depth; // far molecules get a flatter, softer shading
     for (const p of [...P].sort((a, b) => a.z - b.z)) {
-      const { c, r } = EL[p.e], rad = 0.7 * r * it.scale * p.f;
+      const { c, r } = EL[p.e], rad = 1.05 * r * it.scale * p.f; // radii sized so bonded atoms just overlap
       const g = ctx.createRadialGradient(p.x - rad * 0.35, p.y - rad * 0.35, rad * 0.1, p.x, p.y, rad);
       g.addColorStop(0, `rgb(${c.map(v => Math.min(255, v + lerp(80, 30, soft))).join(',')})`);
       g.addColorStop(0.55, `rgb(${c.join(',')})`);
