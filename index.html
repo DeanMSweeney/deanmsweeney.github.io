@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dean M. Sweeney</title>
+<meta name="description" content="Dean M. Sweeney, PhD student in Chemical Engineering and Scientific Computing at the University of Michigan. Generative ML and quantum chemistry for catalyst discovery.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cline x1='32' y1='28' x2='14' y2='44' stroke='%23889' stroke-width='6'/%3E%3Cline x1='32' y1='28' x2='50' y2='44' stroke='%23889' stroke-width='6'/%3E%3Ccircle cx='32' cy='26' r='16' fill='%23d63a32'/%3E%3Ccircle cx='13' cy='46' r='10' fill='%23e8ecf1' stroke='%23889' stroke-width='2'/%3E%3Ccircle cx='51' cy='46' r='10' fill='%23e8ecf1' stroke='%23889' stroke-width='2'/%3E%3C/svg%3E">
+<!-- Link previews. Replace the domain if you use a custom one. -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Dean M. Sweeney">
+<meta property="og:description" content="PhD student at the University of Michigan. Generative ML and quantum chemistry for catalyst discovery.">
+<meta property="og:url" content="https://deanmsweeney.github.io/">
+<meta property="og:image" content="https://deanmsweeney.github.io/img/headshot.jpg">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: fixed left identity column, single reading column on the right; stacks on phones. */
+:root {
+  --bg: #f7f8fa;
+  --surface: #ffffff;
+  --ink: #1b2330;
+  --muted: #5d6675;
+  --line: #e1e5eb;
+  --accent: #c8402f;      /* oxygen red: structure, labels */
+  --accent-soft: #fbe9e6;
+  --accent-ink: #9c2e20;
+  --link: #2f5fb8;        /* nitrogen blue: links */
+  --link-soft: #e5ecf8;
+  --link-ink: #234a91;
+  --mol-opacity: 0.22;
+  --font-display: "Newsreader", Georgia, "Times New Roman", serif;
+  --font-body: "IBM Plex Sans", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11151b;
+    --surface: #181e26;
+    --ink: #e7ebf0;
+    --muted: #9ba5b3;
+    --line: #29313c;
+    --accent: #f07a69;
+    --accent-soft: #3a1f1c;
+    --accent-ink: #f6a194;
+    --link: #86a9ef;
+    --link-soft: #1d2a42;
+    --link-ink: #a9c2f4;
+    --mol-opacity: 0.30;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11151b;
+  --surface: #181e26;
+  --ink: #e7ebf0;
+  --muted: #9ba5b3;
+  --line: #29313c;
+  --accent: #f07a69;
+  --accent-soft: #3a1f1c;
+  --accent-ink: #f6a194;
+  --link: #86a9ef;
+  --link-soft: #1d2a42;
+  --link-ink: #a9c2f4;
+  --mol-opacity: 0.30;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16.5px;
+  line-height: 1.6;
+}
+a { color: var(--link); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+a:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; border-radius: 2px; }
+img { max-width: 100%; display: block; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 600; text-wrap: balance; margin: 0; line-height: 1.2; }
+
+.wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 56px 24px 80px;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 64px;
+}
+
+/* Identity column */
+.id { position: sticky; top: 40px; align-self: start; display: flex; flex-direction: column; gap: 18px; max-height: calc(100vh - 56px); overflow-y: auto; scrollbar-width: none; }
+.id img { width: 160px; height: 160px; border-radius: 50%; object-fit: cover; border: 1px solid var(--line); }
+.id h1 { font-size: 2rem; }
+.role { color: var(--muted); font-size: 0.95rem; margin: 0; }
+.links { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; font-size: 0.95rem; }
+.links a { text-decoration: none; }
+.links a:hover { text-decoration: underline; }
+.links .k { display: inline-block; width: 76px; color: var(--muted); font-family: var(--font-mono); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
+
+.side { display: flex; flex-direction: column; gap: 8px; padding-top: 16px; border-top: 1px solid var(--line); }
+.side h4 { margin: 0; font-family: var(--font-mono); font-size: 0.74rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.side ul { list-style: none; padding: 0; margin: 0; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tags li { font-size: 0.8rem; padding: 3px 9px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-ink); }
+.tags li:nth-child(even) { background: var(--link-soft); color: var(--link-ink); }
+.edu { display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem; line-height: 1.4; }
+.edu b { font-weight: 600; }
+.edu span { display: block; color: var(--muted); font-size: 0.82rem; }
+.jump ul { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.9rem; }
+.jump a { text-decoration: none; }
+.jump a:hover { text-decoration: underline; }
+html { scroll-behavior: smooth; }
+section { scroll-margin-top: 32px; }
+
+.fig img { cursor: zoom-in; }
+.lb { position: fixed; inset: 0; z-index: 10; display: none; align-items: center; justify-content: center; padding: 24px; background: rgba(10, 16, 24, 0.82); cursor: zoom-out; }
+.lb.open { display: flex; }
+.lb img { max-width: min(1400px, 100%); max-height: 100%; background: #fff; border-radius: 8px; padding: 16px; }
+
+/* Main column */
+main { display: flex; flex-direction: column; gap: 56px; max-width: 720px; }
+section { display: flex; flex-direction: column; gap: 20px; }
+h2 {
+  font-size: 1.45rem;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+  position: relative;
+}
+h2::after {
+  content: ""; position: absolute; left: 0; bottom: -1px; width: 40px; height: 2px; background: var(--accent);
+}
+.about p { margin: 0; }
+.about { gap: 14px; }
+
+.pub { display: flex; flex-direction: column; gap: 14px; padding-bottom: 36px; border-bottom: 1px solid var(--line); }
+.pub:last-child { border-bottom: 0; padding-bottom: 0; }
+.meta { font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); letter-spacing: 0.02em; display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.meta .venue { color: var(--accent); font-weight: 500; }
+.pub h3 { font-size: 1.28rem; }
+.pub h3 a { color: var(--ink); text-decoration: none; }
+.pub h3 a:hover { color: var(--link); text-decoration: underline; }
+.authors { font-size: 0.9rem; color: var(--muted); margin: 0; }
+.authors b { color: var(--ink); font-weight: 600; }
+.fig { background: #ffffff; border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+.fig img { margin: 0 auto; max-height: 320px; width: auto; }
+.pub p { margin: 0; }
+.role-note { font-size: 0.93rem; background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; padding: 12px 14px; }
+.role-note b { font-weight: 600; }
+
+.list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }
+.list li { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 16px; }
+.list .when { font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent); padding-top: 3px; font-variant-numeric: tabular-nums; }
+.list .what { margin: 0; }
+.list .sub { display: block; color: var(--muted); font-size: 0.9rem; }
+
+footer { color: var(--muted); font-size: 0.85rem; }
+
+
+/* Background molecules */
+#mol-bg { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: var(--mol-opacity); }
+.wrap { position: relative; z-index: 1; }
+
+@media (max-width: 860px) {
+  .wrap { grid-template-columns: minmax(0, 1fr); gap: 40px; padding-top: 32px; }
+  .id { position: static; }
+  .jump { display: none; }
+  .id img { width: 132px; height: 132px; }
+}
+@media (max-width: 420px) {
+  .wrap { padding-left: 16px; padding-right: 16px; }
+  .list li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <aside class="id">
+    <img src="img/headshot.jpg" alt="Portrait of Dean M. Sweeney">
+    <div>
+      <h1>Dean M. Sweeney</h1>
+      <p class="role">PhD Student, Chemical Engineering &amp; Scientific Computing<br>University of Michigan, Goldsmith Lab</p>
+    </div>
+    <ul class="links">
+      <li><span class="k">Email</span><a href="mailto:dmsween@umich.edu">dmsween@umich.edu</a></li>
+      <li><span class="k">Scholar</span><a href="https://scholar.google.com/citations?user=zuzMSTwAAAAJ&amp;hl=en">Google Scholar</a></li>
+      <li><span class="k">GitHub</span><a href="https://github.com/DeanMSweeney">DeanMSweeney</a></li>
+      <li><span class="k">LinkedIn</span><a href="https://www.linkedin.com/in/deanmsweeney/">deanmsweeney</a></li>
+    </ul>
+    <nav class="side jump" aria-label="Sections">
+      <h4>On this page</h4>
+      <ul>
+        <li><a href="#news">News</a></li><li><a href="#preprints">Preprints</a></li><li><a href="#research">Publications</a></li><li><a href="#talks">Talks</a></li><li><a href="#honors">Honors</a></li>
+      </ul>
+    </nav>
+    <div class="side">
+      <h4>Research interests</h4>
+      <ul class="tags">
+        <li>Generative ML</li><li>Flow matching</li><li>DFT</li><li>Heterogeneous catalysis</li><li>Electrocatalysis</li>
+      </ul>
+    </div>
+    <div class="side">
+      <h4>Education</h4>
+      <ul class="edu">
+        <li><b>PhD</b>, Chemical Engineering &amp; Scientific Computing<span>University of Michigan, expected 2028</span></li>
+        <li><b>M.S.</b>, Chemical Engineering<span>University of Michigan, 2024</span></li>
+        <li><b>B.S.</b>, Chemical Engineering<span>West Virginia University, 2023</span></li>
+      </ul>
+    </div>
+  </aside>
+
+  <main>
+    <section class="about" id="about">
+      <h2>About</h2>
+      <p>I am a PhD student in Chemical Engineering and Scientific Computing at the University of Michigan, advised by Prof. Bryan Goldsmith. My research uses generative machine learning and quantum chemistry to discover and design heterogeneous catalysts. I build models that generate catalyst structures with target properties, and I use density functional theory to understand how molecules behave at catalyst surfaces and electrochemical interfaces.</p>
+      <p>Before my PhD, I studied Chemical Engineering at West Virginia University, where I worked on modeling and optimizing hydrogen production processes. I also spent two and a half years as a process engineering co-op at Ingevity, where I developed real-time process monitoring tools for activated carbon production and coordinated training on them for over 3,000 plant personnel across multiple U.S. sites.</p>
+    </section>
+
+    <section id="news">
+      <h2>News</h2>
+      <ul class="list">
+        <li><span class="when">2026</span><p class="what">Nominated speaker at the Michigan Catalysis Society Fall Forum</p></li>
+        <li><span class="when">2026</span><p class="what">Presented our pKa and O–H stretching frequency work at the AIChE Annual Meeting in Minneapolis</p></li>
+        <li><span class="when">Aug 2026</span><p class="what">Named a MICDE Fellow</p></li>
+        <li><span class="when">May 2026</span><p class="what">TSAgent preprint posted on <a href="https://arxiv.org/abs/2605.14154">arXiv</a></p></li>
+        <li><span class="when">2025</span><p class="what">Co-first author paper on self-assembled monolayers in perovskite solar cells published in <a href="https://pubs.acs.org/jacsat/article/147/52/48136/3740645/Multilayer-Formation-Interfacial-Binding-and">JACS</a></p></li>
+      </ul>
+    </section>
+
+    <section id="preprints">
+      <h2>Preprints</h2>
+      <article class="pub">
+        <div class="meta"><span class="venue">arXiv:2605.14154</span><span>2026</span></div>
+        <h3><a href="https://arxiv.org/abs/2605.14154">TSAgent: An Agentic Workflow for Autonomous Transition State Search</a></h3>
+        <p class="authors">V. Madhavan, A. Mathanker, <b>D. M. Sweeney</b>, O. A. Ohiro, Y. Wang, B. R. Goldsmith</p>
+        <p>Finding transition states is one of the most labor-intensive steps in computational catalysis and usually takes an expert's judgment to get calculations to converge. TSAgent is an autonomous workflow that locates transition states at DFT-level accuracy by repeatedly planning, running calculations, diagnosing failures from convergence and geometry feedback, and replanning. On held-out cases its success rate is comparable to that of expert human practitioners.</p>
+      </article>
+    </section>
+
+    <section id="research">
+      <h2>Publications</h2>
+
+      <article class="pub">
+        <div class="meta"><span class="venue">J. Am. Chem. Soc.</span><span>2025</span><span>Co-first author</span></div>
+        <h3><a href="https://pubs.acs.org/jacsat/article/147/52/48136/3740645/Multilayer-Formation-Interfacial-Binding-and">Multilayer Formation, Interfacial Binding, and Stability of Self-Assembled Monolayers in Perovskite Solar Cells</a></h3>
+        <p class="authors">C. A. Figueroa Morales<sup>‡</sup>, Z. Pizzo<sup>‡</sup>, <b>D. M. Sweeney</b><sup>‡</sup>, Z. Hu<sup>‡</sup>, G. Sharma, S. Park, A. Dobre, S. Seong, A. T. Liu, N. Singh, B. R. Goldsmith, X. Gong <span>(‡ equal contribution)</span></p>
+        <div class="fig"><img src="img/sam.jpg" alt="Self-assembled monolayer molecules stacking above and binding to an oxide surface"></div>
+        <p>Self-assembled monolayers are increasingly used as the hole transport layer in perovskite solar cells, but how these molecules actually assemble and bind at the interface has been unclear. This experimental and computational collaboration shows that they can form multilayers rather than a single clean monolayer, and links the way they bind to the long-term stability of the device.</p>
+        <p class="role-note"><b>My contribution:</b> I used density functional theory to determine the predominant formation and binding mechanisms of the monolayer molecules at the interface. These results were used to experimentally classify the hole transport layer and increase device stability 5-fold.</p>
+      </article>
+
+      <article class="pub">
+        <div class="meta"><span class="venue">Communications Chemistry</span><span>2025</span><span>First author</span></div>
+        <h3><a href="https://www.nature.com/articles/s42004-025-01579-y">A grand canonical study of the potential dependence of nitrate adsorption and dissociation across metals and dilute alloys</a></h3>
+        <p class="authors"><b>D. M. Sweeney</b>, B. Tran, B. R. Goldsmith</p>
+        <div class="fig"><img src="img/nitrate.jpg" alt="Graphical abstract for the nitrate adsorption and dissociation study"></div>
+        <p>Electrocatalytic nitrate reduction can turn a common water pollutant into useful products, but most computational studies treat the applied potential with a simple model. Using explicit and analytical grand canonical DFT across pure metals and Cu-based single-atom alloys, I showed that nitrate adsorption depends on potential more weakly than the standard computational hydrogen electrode assumes, and that the N–O bond-breaking barrier depends on it only slightly. Both trends follow the change in the surface dipole, and ignoring double-layer effects can introduce significant errors in computed energetics.</p>
+      </article>
+
+      <article class="pub">
+        <div class="meta"><span class="venue">Ind. Eng. Chem. Res.</span><span>2023</span><span>First author</span></div>
+        <h3><a href="https://doi.org/10.1021/acs.iecr.3c02045">Techno-economic Analysis and Optimization of Intensified, Large-Scale Hydrogen Production with Membrane Reactors</a></h3>
+        <p class="authors"><b>D. M. Sweeney</b>, V. Alves, S. Sakhai, S. Dinh, F. V. Lima</p>
+        <div class="fig"><img src="img/h2.png" alt="Workflow from conventional and intensified steam methane reforming, through a membrane reactor model, to economic optimization"></div>
+        <p>Steam methane reforming supplies most of the world's hydrogen but is energy intensive. I modeled a large-scale reforming plant intensified with palladium membrane reactors, then ran economic analyses and constrained nonlinear optimization over the full process. Even with higher compressor, membrane, and electricity costs, the membrane reactor design lowers natural gas use and total annual cost compared to the conventional plant.</p>
+      </article>
+    </section>
+
+    <section id="talks">
+      <h2>Talks</h2>
+      <ul class="list">
+        <li><span class="when">2026</span><p class="what">Generative Modeling for Discovery and Design of Heterogeneous Catalysts<span class="sub">Nominated speaker, Michigan Catalysis Society Fall Forum</span></p></li>
+        <li><span class="when">2026</span><p class="what">Effects of Hydration on the Predictability of Acid pKa from O–H Stretching Frequency in Solution and at Interfaces<span class="sub">AIChE Annual Meeting, Minneapolis, MN</span></p></li>
+        <li><span class="when">2025</span><p class="what">Nitrate Adsorption and Dissociation across Pure Metals and Dilute Alloys: a Grand Canonical Study<span class="sub">AIChE Annual Meeting, Boston, MA</span></p></li>
+        <li><span class="when">2025</span><p class="what">Nitrate Adsorption and Dissociation across Pure Metals and Dilute Alloys: a Grand Canonical Study<span class="sub">Annual Michigan Catalysis Society Seminar, Warren, MI</span></p></li>
+      </ul>
+    </section>
+
+    <section id="honors">
+      <h2>Honors</h2>
+      <ul class="list">
+        <li><span class="when">2026</span><p class="what">MICDE Fellow<span class="sub">Michigan Institute for Computational Discovery &amp; Engineering</span></p></li>
+        <li><span class="when">2025</span><p class="what">Science Communication Fellow<span class="sub">University of Michigan Museum of Natural History</span></p></li>
+        <li><span class="when">2022</span><p class="what">NSF Undergraduate Research Fellow<span class="sub">West Virginia University</span></p></li>
+      </ul>
+    </section>
+
+    <footer>Ann Arbor, MI · Last updated November 2026</footer>
+  </main>
+</div>
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Enlarged figure"><img alt=""></div>
+<script>
+// Click-to-enlarge figures
+(() => {
+  const lb = document.getElementById('lb'), big = lb.querySelector('img');
+  const close = () => lb.classList.remove('open');
+  document.querySelectorAll('.fig img').forEach(img => img.addEventListener('click', () => {
+    big.src = img.src; big.alt = img.alt; lb.classList.add('open');
+  }));
+  lb.addEventListener('click', close);
+  addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+})();
+
+</script>
+<canvas id="mol-bg" aria-hidden="true"></canvas>
+<script>
+(() => {
+  const cv = document.getElementById('mol-bg');
+  const ctx = cv.getContext('2d');
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Element colors (CPK) and display radii in Angstrom
+  const EL = {
+    H: { c: [235, 238, 242], r: 0.32 },
+    O: { c: [214, 58, 50], r: 0.62 },
+    N: { c: [58, 98, 204], r: 0.64 },
+    C: { c: [120, 126, 134], r: 0.64 }
+  };
+
+  // Geometries in Angstrom: [element, x, y, z], bonds as atom index pairs
+  const t = (d) => d * Math.PI / 180;
+  const ring = (el, r, n, z = 0, off = 0) =>
+    Array.from({ length: n }, (_, i) => [el, r * Math.cos(off + 2 * Math.PI * i / n), r * Math.sin(off + 2 * Math.PI * i / n), z]);
+  const MOLS = {
+    H2O: { w: 4, atoms: [['O', 0, 0, 0], ['H', 0.757, 0.586, 0], ['H', -0.757, 0.586, 0]], bonds: [[0, 1], [0, 2]] },
+    NO3: { w: 3, atoms: [['N', 0, 0, 0], ...ring('O', 1.25, 3, 0, t(90))], bonds: [[0, 1], [0, 2], [0, 3]] },
+    NO2: { w: 3, atoms: [['N', 0, 0, 0], ['O', 1.10, -0.47, 0], ['O', -1.10, -0.47, 0]], bonds: [[0, 1], [0, 2]] },
+    NH3: { w: 1.5, atoms: [['N', 0, 0, 0.12], ...ring('H', 0.94, 3, -0.27)], bonds: [[0, 1], [0, 2], [0, 3]] },
+    CO2: { w: 1, atoms: [['C', 0, 0, 0], ['O', 1.16, 0, 0], ['O', -1.16, 0, 0]], bonds: [[0, 1], [0, 2]] },
+    N2:  { w: 1, atoms: [['N', 0.55, 0, 0], ['N', -0.55, 0, 0]], bonds: [[0, 1]] }
+  };
+  const bag = Object.entries(MOLS).flatMap(([k, m]) => Array(Math.round(m.w * 2)).fill(k));
+
+  let W = 0, H = 0, items = [];
+  const rand = (a, b) => a + Math.random() * (b - a);
+
+  function make(x, y) {
+    const m = MOLS[bag[Math.floor(Math.random() * bag.length)]];
+    const u = rand(-1, 1), ph = rand(0, 2 * Math.PI), s = Math.sqrt(1 - u * u);
+    const sp = rand(6, 16), dir = rand(0, 2 * Math.PI);
+    return {
+      m, x, y,
+      vx: sp * Math.cos(dir), vy: sp * Math.sin(dir),
+      axis: [s * Math.cos(ph), s * Math.sin(ph), u],
+      th: rand(0, 2 * Math.PI), w: rand(0.15, 0.45) * (Math.random() < 0.5 ? -1 : 1),
+      scale: rand(13, 22)
+    };
+  }
+
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = innerWidth; H = innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const n = Math.min(32, Math.max(10, Math.round(W * H / 55000)));
+    while (items.length < n) items.push(make(rand(0, W), rand(0, H)));
+    items.length = n;
+  }
+
+  // Rotation matrix from axis-angle (Rodrigues)
+  function rot([x, y, z], a) {
+    const c = Math.cos(a), s = Math.sin(a), k = 1 - c;
+    return [
+      c + x * x * k, x * y * k - z * s, x * z * k + y * s,
+      y * x * k + z * s, c + y * y * k, y * z * k - x * s,
+      z * x * k - y * s, z * y * k + x * s, c + z * z * k
+    ];
+  }
+
+  function draw(it) {
+    const R = rot(it.axis, it.th);
+    const P = it.m.atoms.map(([e, x, y, z]) => {
+      const X = R[0] * x + R[1] * y + R[2] * z, Y = R[3] * x + R[4] * y + R[5] * z, Z = R[6] * x + R[7] * y + R[8] * z;
+      const f = 1 + Z * 0.08;
+      return { e, x: it.x + X * it.scale * f, y: it.y + Y * it.scale * f, z: Z, f };
+    });
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgb(140,148,160)';
+    ctx.lineWidth = it.scale * 0.22;
+    for (const [a, b] of it.m.bonds) {
+      ctx.beginPath(); ctx.moveTo(P[a].x, P[a].y); ctx.lineTo(P[b].x, P[b].y); ctx.stroke();
+    }
+    for (const p of [...P].sort((a, b) => a.z - b.z)) {
+      const { c, r } = EL[p.e], rad = 0.7 * r * it.scale * p.f;
+      const g = ctx.createRadialGradient(p.x - rad * 0.35, p.y - rad * 0.35, rad * 0.1, p.x, p.y, rad);
+      g.addColorStop(0, `rgb(${c.map(v => Math.min(255, v + 70)).join(',')})`);
+      g.addColorStop(0.55, `rgb(${c.join(',')})`);
+      g.addColorStop(1, `rgb(${c.map(v => v * 0.55 | 0).join(',')})`);
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(p.x, p.y, rad, 0, 2 * Math.PI); ctx.fill();
+    }
+  }
+
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    ctx.clearRect(0, 0, W, H);
+    const pad = 60;
+    for (const it of items) {
+      it.x += it.vx * dt; it.y += it.vy * dt; it.th += it.w * dt;
+      if (it.x < -pad) it.x = W + pad; else if (it.x > W + pad) it.x = -pad;
+      if (it.y < -pad) it.y = H + pad; else if (it.y > H + pad) it.y = -pad;
+      draw(it);
+    }
+    if (!still) requestAnimationFrame(frame);
+  }
+
+  addEventListener('resize', () => { resize(); if (still) frame(last); });
+  resize();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
