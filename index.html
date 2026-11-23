@@ -30,7 +30,7 @@
   --link: #2f5fb8;        /* nitrogen blue: links */
   --link-soft: #e5ecf8;
   --link-ink: #234a91;
-  --mol-opacity: 0.22;
+  --mol-opacity: 0.26;
   --font-display: "Newsreader", Georgia, "Times New Roman", serif;
   --font-body: "IBM Plex Sans", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
@@ -312,6 +312,7 @@ footer { color: var(--muted); font-size: 0.85rem; }
 </script>
 <canvas id="mol-bg" aria-hidden="true"></canvas>
 <script>
+// Background molecules: depth layers with scroll parallax, plus vibrational modes
 (() => {
   const cv = document.getElementById('mol-bg');
   const ctx = cv.getContext('2d');
@@ -325,33 +326,69 @@ footer { color: var(--muted); font-size: 0.85rem; }
     C: { c: [120, 126, 134], r: 0.64 }
   };
 
-  // Geometries in Angstrom: [element, x, y, z], bonds as atom index pairs
-  const t = (d) => d * Math.PI / 180;
+  // Helpers for geometry and mode vectors
+  const t = d => d * Math.PI / 180;
   const ring = (el, r, n, z = 0, off = 0) =>
     Array.from({ length: n }, (_, i) => [el, r * Math.cos(off + 2 * Math.PI * i / n), r * Math.sin(off + 2 * Math.PI * i / n), z]);
+  const unit = (a, b) => { const v = [b[1] - a[1], b[2] - a[2], b[3] - a[3]], l = Math.hypot(...v) || 1; return v.map(x => x / l); };
+  // Stretch: every atom bonded to atom 0 moves along its bond; atom 0 recoils slightly
+  const stretch = atoms => atoms.map((a, i) => i ? unit(atoms[0], a) : [0, 0, 0]);
+
+  // Geometries [element, x, y, z] in Angstrom; modes are per-atom displacement directions with a visual frequency (Hz)
+  const H2O = [['O', 0, 0, 0], ['H', 0.757, 0.586, 0], ['H', -0.757, 0.586, 0]];
+  const NO2 = [['N', 0, 0, 0], ['O', 1.10, -0.47, 0], ['O', -1.10, -0.47, 0]];
+  const NO3 = [['N', 0, 0, 0], ...ring('O', 1.25, 3, 0, t(90))];
+  const NH3 = [['N', 0, 0, 0.12], ...ring('H', 0.94, 3, -0.27)];
+  const CO2 = [['C', 0, 0, 0], ['O', 1.16, 0, 0], ['O', -1.16, 0, 0]];
+  const N2 = [['N', 0.55, 0, 0], ['N', -0.55, 0, 0]];
   const MOLS = {
-    H2O: { w: 4, atoms: [['O', 0, 0, 0], ['H', 0.757, 0.586, 0], ['H', -0.757, 0.586, 0]], bonds: [[0, 1], [0, 2]] },
-    NO3: { w: 3, atoms: [['N', 0, 0, 0], ...ring('O', 1.25, 3, 0, t(90))], bonds: [[0, 1], [0, 2], [0, 3]] },
-    NO2: { w: 3, atoms: [['N', 0, 0, 0], ['O', 1.10, -0.47, 0], ['O', -1.10, -0.47, 0]], bonds: [[0, 1], [0, 2]] },
-    NH3: { w: 1.5, atoms: [['N', 0, 0, 0.12], ...ring('H', 0.94, 3, -0.27)], bonds: [[0, 1], [0, 2], [0, 3]] },
-    CO2: { w: 1, atoms: [['C', 0, 0, 0], ['O', 1.16, 0, 0], ['O', -1.16, 0, 0]], bonds: [[0, 1], [0, 2]] },
-    N2:  { w: 1, atoms: [['N', 0.55, 0, 0], ['N', -0.55, 0, 0]], bonds: [[0, 1]] }
+    H2O: { w: 4, atoms: H2O, bonds: [[0, 1], [0, 2]], modes: [
+      { v: [[0, -0.13, 0], [0.79, 0.61, 0], [-0.79, 0.61, 0]], f: 1.3 },          // symmetric stretch
+      { v: [[0, -0.12, 0], [-0.61, 0.79, 0], [0.61, 0.79, 0]], f: 0.7, a: 1.6 }, // bend
+      { v: [[0, 0, 0], [0.79, 0.61, 0], [0.79, -0.61, 0]], f: 1.45 }             // asymmetric stretch
+    ] },
+    NO2: { w: 3, atoms: NO2, bonds: [[0, 1], [0, 2]], modes: [
+      { v: [[0, 0.2, 0], [0.92, -0.39, 0], [-0.92, -0.39, 0]], f: 1.1 },
+      { v: [[0, -0.5, 0], [0.39, 0.92, 0], [-0.39, 0.92, 0]], f: 0.6, a: 1.6 }
+    ] },
+    NO3: { w: 3, atoms: NO3, bonds: [[0, 1], [0, 2], [0, 3]], modes: [
+      { v: stretch(NO3), f: 0.9 },                                                 // breathing
+      { v: [[0, 0, 1], [0, 0, -0.33], [0, 0, -0.33], [0, 0, -0.33]], f: 0.65, a: 2 } // umbrella
+    ] },
+    NH3: { w: 1.5, atoms: NH3, bonds: [[0, 1], [0, 2], [0, 3]], modes: [
+      { v: [[0, 0, 1], [0, 0, -0.3], [0, 0, -0.3], [0, 0, -0.3]], f: 0.6, a: 2.2 }, // umbrella
+      { v: stretch(NH3), f: 1.4 }
+    ] },
+    CO2: { w: 1, atoms: CO2, bonds: [[0, 1], [0, 2]], modes: [
+      { v: [[0, 0, 0], [1, 0, 0], [-1, 0, 0]], f: 1.0 },
+      { v: [[0, 1, 0], [0, -0.5, 0], [0, -0.5, 0]], f: 0.55, a: 1.8 }
+    ] },
+    N2: { w: 1, atoms: N2, bonds: [[0, 1]], modes: [{ v: [[1, 0, 0], [-1, 0, 0]], f: 1.2 }] }
   };
   const bag = Object.entries(MOLS).flatMap(([k, m]) => Array(Math.round(m.w * 2)).fill(k));
 
+  const AMP = 0.09; // vibration amplitude in Angstrom (exaggerated so it reads on screen)
+  const PAD = 70;
   let W = 0, H = 0, items = [];
   const rand = (a, b) => a + Math.random() * (b - a);
+  const lerp = (a, b, k) => a + (b - a) * k;
+  const wrap = (v, n) => ((v % n) + n) % n;
 
-  function make(x, y) {
+  function make() {
     const m = MOLS[bag[Math.floor(Math.random() * bag.length)]];
+    const depth = Math.pow(Math.random(), 1.15); // more far molecules than near ones
     const u = rand(-1, 1), ph = rand(0, 2 * Math.PI), s = Math.sqrt(1 - u * u);
-    const sp = rand(6, 16), dir = rand(0, 2 * Math.PI);
+    const sp = lerp(4, 14, depth), dir = rand(0, 2 * Math.PI);
     return {
-      m, x, y,
+      m, depth,
+      x: rand(0, W + 2 * PAD), y: rand(0, H + 2 * PAD),
       vx: sp * Math.cos(dir), vy: sp * Math.sin(dir),
       axis: [s * Math.cos(ph), s * Math.sin(ph), u],
       th: rand(0, 2 * Math.PI), w: rand(0.15, 0.45) * (Math.random() < 0.5 ? -1 : 1),
-      scale: rand(13, 22)
+      scale: lerp(11, 28, depth),
+      alpha: lerp(0.5, 1, depth),
+      parallax: lerp(0.04, 0.4, depth),
+      phase: m.modes.map(() => rand(0, 2 * Math.PI))
     };
   }
 
@@ -360,9 +397,10 @@ footer { color: var(--muted); font-size: 0.85rem; }
     W = innerWidth; H = innerHeight;
     cv.width = W * dpr; cv.height = H * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const n = Math.min(32, Math.max(10, Math.round(W * H / 55000)));
-    while (items.length < n) items.push(make(rand(0, W), rand(0, H)));
+    const n = Math.min(38, Math.max(12, Math.round(W * H / 45000)));
+    while (items.length < n) items.push(make());
     items.length = n;
+    items.sort((a, b) => a.depth - b.depth); // far first, near drawn on top
   }
 
   // Rotation matrix from axis-angle (Rodrigues)
@@ -375,45 +413,54 @@ footer { color: var(--muted); font-size: 0.85rem; }
     ];
   }
 
-  function draw(it) {
+  function draw(it, time, scrollY) {
+    const cx = wrap(it.x, W + 2 * PAD) - PAD;
+    const cy = wrap(it.y - scrollY * it.parallax, H + 2 * PAD) - PAD;
     const R = rot(it.axis, it.th);
-    const P = it.m.atoms.map(([e, x, y, z]) => {
+    const modes = it.m.modes;
+    const P = it.m.atoms.map(([e, x, y, z], i) => {
+      for (let k = 0; k < modes.length; k++) {
+        const d = modes[k].v[i], q = AMP * (modes[k].a || 1) * Math.sin(2 * Math.PI * modes[k].f * time + it.phase[k]);
+        x += d[0] * q; y += d[1] * q; z += d[2] * q;
+      }
       const X = R[0] * x + R[1] * y + R[2] * z, Y = R[3] * x + R[4] * y + R[5] * z, Z = R[6] * x + R[7] * y + R[8] * z;
       const f = 1 + Z * 0.08;
-      return { e, x: it.x + X * it.scale * f, y: it.y + Y * it.scale * f, z: Z, f };
+      return { e, x: cx + X * it.scale * f, y: cy + Y * it.scale * f, z: Z, f };
     });
+    ctx.globalAlpha = it.alpha;
     ctx.lineCap = 'round';
     ctx.strokeStyle = 'rgb(140,148,160)';
-    ctx.lineWidth = it.scale * 0.22;
+    ctx.lineWidth = it.scale * 0.2;
     for (const [a, b] of it.m.bonds) {
       ctx.beginPath(); ctx.moveTo(P[a].x, P[a].y); ctx.lineTo(P[b].x, P[b].y); ctx.stroke();
     }
+    const soft = 1 - it.depth; // far molecules get a flatter, softer shading
     for (const p of [...P].sort((a, b) => a.z - b.z)) {
       const { c, r } = EL[p.e], rad = 0.7 * r * it.scale * p.f;
       const g = ctx.createRadialGradient(p.x - rad * 0.35, p.y - rad * 0.35, rad * 0.1, p.x, p.y, rad);
-      g.addColorStop(0, `rgb(${c.map(v => Math.min(255, v + 70)).join(',')})`);
+      g.addColorStop(0, `rgb(${c.map(v => Math.min(255, v + lerp(80, 30, soft))).join(',')})`);
       g.addColorStop(0.55, `rgb(${c.join(',')})`);
-      g.addColorStop(1, `rgb(${c.map(v => v * 0.55 | 0).join(',')})`);
+      g.addColorStop(1, `rgb(${c.map(v => v * lerp(0.5, 0.8, soft) | 0).join(',')})`);
       ctx.fillStyle = g;
       ctx.beginPath(); ctx.arc(p.x, p.y, rad, 0, 2 * Math.PI); ctx.fill();
     }
+    ctx.globalAlpha = 1;
   }
 
   let last = performance.now();
   function frame(now) {
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    const time = now / 1000, sy = window.scrollY;
     ctx.clearRect(0, 0, W, H);
-    const pad = 60;
     for (const it of items) {
       it.x += it.vx * dt; it.y += it.vy * dt; it.th += it.w * dt;
-      if (it.x < -pad) it.x = W + pad; else if (it.x > W + pad) it.x = -pad;
-      if (it.y < -pad) it.y = H + pad; else if (it.y > H + pad) it.y = -pad;
-      draw(it);
+      draw(it, time, sy);
     }
     if (!still) requestAnimationFrame(frame);
   }
 
   addEventListener('resize', () => { resize(); if (still) frame(last); });
+  if (still) addEventListener('scroll', () => frame(last), { passive: true });
   resize();
   requestAnimationFrame(frame);
 })();
